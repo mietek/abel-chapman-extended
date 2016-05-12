@@ -10,3 +10,6 @@ open import AbelChapmanExtended.Termination.Eval
 open import AbelChapmanExtended.Termination.Readback
 open import AbelChapmanExtended.Termination
 open import AbelChapmanExtended.Examples
+
+open import TowardsAltArtemov.SyntaxCatholic
+open import TowardsAltArtemov.NormalizationCatholic
