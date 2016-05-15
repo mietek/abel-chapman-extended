@@ -57,6 +57,63 @@ mutual
           ω-reduce v′
     ∎
     where open ≈-Reasoning
+  ren-eval η (inl t) ρ =
+    proof
+          ren-val η <$> (v ← eval t ρ ⁏
+                         now (inl v))
+    ≈⟨ ⋘ eval t ρ ⟩
+          v ← eval t ρ ⁏
+          ren-val η <$> now (inl v)
+    ≈⟨ v ⇚ eval t ρ ⁏
+       ≈now (inl (ren-val η v)) ⟩
+          v ← eval t ρ ⁏
+          now (inl (ren-val η v))
+    ≈⟨ ⋙ eval t ρ ⟩
+          v′ ← ren-val η <$> eval t ρ ⁏
+          now (inl v′)
+    ≈⟨ ∵ ren-eval η t ρ ⟩
+          v′ ← eval t (ren-env η ρ) ⁏
+          now (inl v′)
+    ∎
+    where open ≈-Reasoning
+  ren-eval η (inr t) ρ =
+    proof
+          ren-val η <$> (v ← eval t ρ ⁏
+                         now (inr v))
+    ≈⟨ ⋘ eval t ρ ⟩
+          v ← eval t ρ ⁏
+          ren-val η <$> now (inr v)
+    ≈⟨ v ⇚ eval t ρ ⁏
+       ≈now (inr (ren-val η v)) ⟩
+          v ← eval t ρ ⁏
+          now (inr (ren-val η v))
+    ≈⟨ ⋙ eval t ρ ⟩
+          v′ ← ren-val η <$> eval t ρ ⁏
+          now (inr v′)
+    ≈⟨ ∵ ren-eval η t ρ ⟩
+          v′ ← eval t (ren-env η ρ) ⁏
+          now (inr v′)
+    ∎
+    where open ≈-Reasoning
+  ren-eval η (case t ul ur) ρ =
+    proof
+          ren-val η <$> (v ← eval t ρ ⁏
+                         κ-reduce v ul ur ρ)
+    ≈⟨ ⋘ eval t ρ ⟩
+          v ← eval t ρ ⁏
+          ren-val η <$> κ-reduce v ul ur ρ
+    ≈⟨ v ⇚ eval t ρ ⁏
+       ren-κ-reduce η v ul ur ρ ⟩
+          v ← eval t ρ ⁏
+          κ-reduce (ren-val η v) ul ur (ren-env η ρ)
+    ≈⟨ ⋙ eval t ρ ⟩
+          v′ ← ren-val η <$> eval t ρ ⁏
+          κ-reduce v′ ul ur (ren-env η ρ)
+    ≈⟨ ∵ ren-eval η t ρ ⟩
+          v′ ← eval t (ren-env η ρ) ⁏
+          κ-reduce v′ ul ur (ren-env η ρ)
+    ∎
+    where open ≈-Reasoning
   ren-eval η (var x)   ρ rewrite ren-lookup η x ρ = ≈now (lookup x (ren-env η ρ))
   ren-eval η (lam t)   ρ = ≈now (lam t (ren-env η ρ))
   ren-eval η (app t u) ρ =
@@ -183,6 +240,15 @@ mutual
   ren-∞eval : ∀ {i Γ Δ Δ′ a} (η : Δ′ ⊇ Δ) (t : Tm Γ a) (ρ : Env Δ Γ) →
               ren-val η ∞<$> ∞eval t ρ ∞≈⟨ i ⟩≈ ∞eval t (ren-env η ρ)
   ≈force (ren-∞eval η t ρ) = ren-eval η t ρ
+
+
+  ren-κ-reduce : ∀ {i Γ Δ′ Δ a b c} (η : Δ′ ⊇ Δ) (v : Val Δ (a ∨ b))
+                 (ul : Tm (Γ , a) c) (ur : Tm (Γ , b) c) (ρ : Env Δ Γ) →
+                 ren-val η <$> κ-reduce v ul ur ρ ≈⟨ i ⟩≈
+                 κ-reduce (ren-val η v) ul ur (ren-env η ρ)
+  ren-κ-reduce η (ne v)  ul ur ρ = ≈refl
+  ren-κ-reduce η (inl v) ul ur ρ = ≈later (ren-∞eval η ul (ρ , v))
+  ren-κ-reduce η (inr v) ul ur ρ = ≈later (ren-∞eval η ur (ρ , v))
 
 
   ren-β-reduce : ∀ {i Δ Δ′ a b} (η : Δ′ ⊇ Δ) (v : Val Δ (a ⇒ b)) (w : Val Δ a) →

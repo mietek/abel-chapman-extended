@@ -19,6 +19,20 @@ open import AbelChapmanExtended.Syntax
 
 
 
+κ₁-reduce-sound : ∀ {Γ Δ a b c} (ul : Tm (Γ , a) c) (ur : Tm (Γ , b) c) →
+                  (ρ : Env Δ Γ) {v : Val Δ a} →
+                  C⟦ c ⟧ (eval ul (ρ , v)) →
+                  C⟦ c ⟧ (κ-reduce (inl v) ul ur ρ)
+κ₁-reduce-sound ul ur ρ (v′ , ⇓v′ , ⟦v′⟧) = (v′ , ⇓later ⇓v′ , ⟦v′⟧)
+
+
+κ₂-reduce-sound : ∀ {Γ Δ a b c} (ul : Tm (Γ , a) c) (ur : Tm (Γ , b) c) →
+                  (ρ : Env Δ Γ) {v : Val Δ b} →
+                  C⟦ c ⟧ (eval ur (ρ , v)) →
+                  C⟦ c ⟧ (κ-reduce (inr v) ul ur ρ)
+κ₂-reduce-sound ul ur ρ (v′ , ⇓v′ , ⟦v′⟧) = (v′ , ⇓later ⇓v′ , ⟦v′⟧)
+
+
 β-reduce-sound : ∀ {Γ Δ a b} (t : Tm (Γ , a) b) (ρ : Env Δ Γ) {w : Val Δ a} →
                  C⟦ b ⟧ (eval t (ρ , w)) →
                  C⟦ b ⟧ (β-reduce (lam t ρ) w)
@@ -33,6 +47,45 @@ open import AbelChapmanExtended.Syntax
       let v′   = ne (boom v)
           ⟦v′⟧ = reflect c (boom v) (boom n , ⇓map boom ⇓n)
       in  (v′ , ⇓bind ⇓v ⇓now , ⟦v′⟧)
+
+
+⟦inl⟧ : ∀ {Δ a b} {v? : Delay ∞ (Val Δ a)} →
+        C⟦ a ⟧ v? →
+        C⟦ a ∨ b ⟧ (v ← v? ⁏
+                    now (inl v))
+⟦inl⟧ (v , ⇓v , ⟦v⟧) =
+      let ⟦v′⟧ = (v , ⇓now , ⟦v⟧)
+      in (inl v , ⇓bind ⇓v ⇓now , ⟦v′⟧)
+
+
+⟦inr⟧ : ∀ {Δ a b} {v? : Delay ∞ (Val Δ b)} →
+        C⟦ b ⟧ v? →
+        C⟦ a ∨ b ⟧ (v ← v? ⁏
+                    now (inr v))
+⟦inr⟧ (v , ⇓v , ⟦v⟧) =
+      let ⟦v′⟧ = (v , ⇓now , ⟦v⟧)
+      in (inr v , ⇓bind ⇓v ⇓now , ⟦v′⟧)
+
+
+⟦case⟧ : ∀ {Γ Δ a b c} (t : Tm Γ (a ∨ b)) {v? : Delay ∞ (Val Δ (a ∨ b))} →
+         (ul : Tm (Γ , a) c) (ur : Tm (Γ , b) c) (ρ : Env Δ Γ) (⟦ρ⟧ : E⟦ Γ ⟧ ρ) →
+         C⟦ a ∨ b ⟧ v? →
+         (∀ (v : Val Δ a) (⟦v⟧ : V⟦ a ⟧ v) → C⟦ c ⟧ (eval ul (ρ , v))) →
+         (∀ (v : Val Δ b) (⟦v⟧ : V⟦ b ⟧ v) → C⟦ c ⟧ (eval ur (ρ , v))) →
+         C⟦ c ⟧ (v ← v? ⁏
+                 κ-reduce v ul ur ρ)
+⟦case⟧ {c = c} t ul ur ρ ⟦ρ⟧ (ne v , ⇓v , (n , ⇓n)) hl hr =
+      let v′   = ne (case v ul ur)
+          ⟦v′⟧ = reflect c (case v ul ur) (case n ul ur , ⇓bind ⇓n ⇓now)
+      in  (v′ , ⇓bind ⇓v ⇓now , ⟦v′⟧)
+⟦case⟧ t ul ur ρ ⟦ρ⟧ (inl v , ⇓v , ⟦v⟧) hl hr =
+      let (n , ⇓n , ⟦n⟧)    = ⟦v⟧
+          (v′ , ⇓v′ , ⟦v′⟧) = κ₁-reduce-sound ul ur ρ (hl n ⟦n⟧)
+      in  (v′ , ⇓bind ⇓v (⇓bind ⇓n ⇓v′) , ⟦v′⟧)
+⟦case⟧ t ul ur ρ ⟦ρ⟧ (inr v , ⇓v , ⟦v⟧) hl hr =
+      let (n , ⇓n , ⟦n⟧)    = ⟦v⟧
+          (v′ , ⇓v′ , ⟦v′⟧) = κ₂-reduce-sound ul ur ρ (hr n ⟦n⟧)
+      in  (v′ , ⇓bind ⇓v (⇓bind ⇓n ⇓v′) , ⟦v′⟧)
 
 
 ⟦var⟧ : ∀ {Γ Δ a} (x : Var Γ a) (ρ : Env Δ Γ) →
@@ -99,6 +152,14 @@ open import AbelChapmanExtended.Syntax
 
 term : ∀ {Γ Δ a} (t : Tm Γ a) (ρ : Env Δ Γ) (⟦ρ⟧ : E⟦ Γ ⟧ ρ) → C⟦ a ⟧ (eval t ρ)
 term (boom t)   ρ ⟦ρ⟧ = ⟦boom⟧ (term t ρ ⟦ρ⟧)
+term (inl t)        ρ ⟦ρ⟧ = ⟦inl⟧ (term t ρ ⟦ρ⟧)
+term (inr t)        ρ ⟦ρ⟧ = ⟦inr⟧ (term t ρ ⟦ρ⟧)
+term (case t ul ur) ρ ⟦ρ⟧ = ⟦case⟧ t ul ur ρ ⟦ρ⟧
+                                (term t ρ ⟦ρ⟧)
+                                (λ v ⟦v⟧ → term ul (ρ , v)
+                                                    (⟦ρ⟧ , ⟦v⟧))
+                                (λ v ⟦v⟧ → term ur (ρ , v)
+                                                    (⟦ρ⟧ , ⟦v⟧))
 term (var x)    ρ ⟦ρ⟧ = ⟦var⟧ x ρ ⟦ρ⟧
 term (lam t)    ρ ⟦ρ⟧ = ⟦lam⟧ t ρ ⟦ρ⟧
                             (λ η w ⟦w⟧ → term t (ren-env η ρ , w)
