@@ -20,7 +20,7 @@ ren-var (lift η) (pop x) = pop (ren-var η x)
 mutual
   ren-nen : ∀ {Δ Δ′} → Δ′ ⊇ Δ → Ren (Ne Nf) Δ Δ′
   ren-nen η (boom n)       = boom (ren-nen η n)
-  ren-nen η (case n ul ur) = case (ren-nen η n) ul ur
+  ren-nen η (case n ml mr) = case (ren-nen η n) (ren-nf (lift η) ml) (ren-nf (lift η) mr)
   ren-nen η (var x)        = var (ren-var η x)
   ren-nen η (app n m)      = app (ren-nen η n) (ren-nf η m)
   ren-nen η (fst n)        = fst (ren-nen η n)
@@ -28,7 +28,7 @@ mutual
 
   ren-nev : ∀ {Δ Δ′} → Δ′ ⊇ Δ → Ren (Ne Val) Δ Δ′
   ren-nev η (boom v)       = boom (ren-nev η v)
-  ren-nev η (case n ul ur) = case (ren-nev η n) ul ur
+  ren-nev η (case v wl wr) = case (ren-nev η v) (ren-val (lift η) wl) (ren-val (lift η) wr)
   ren-nev η (var x)        = var (ren-var η x)
   ren-nev η (app v w)      = app (ren-nev η v) (ren-val η w)
   ren-nev η (fst v)        = fst (ren-nev η v)
@@ -60,3 +60,6 @@ wk = weak id
 
 wk-val : ∀ {Δ a c} → Val Δ c → Val (Δ , a) c
 wk-val = ren-val wk
+
+wk-env : ∀ {Δ a Γ} → Env Δ Γ → Env (Δ , a) Γ
+wk-env = ren-env wk

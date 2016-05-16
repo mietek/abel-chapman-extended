@@ -8,11 +8,18 @@ open import AbelChapmanExtended.Normalization
 open import AbelChapmanExtended.OPE
 open import AbelChapmanExtended.Renaming
 open import AbelChapmanExtended.RenamingLemmas.Normalization1
-open import AbelChapmanExtended.RenamingLemmas.OPE
+--open import AbelChapmanExtended.RenamingLemmas.OPE
 open import AbelChapmanExtended.StrongBisimilarity
 open import AbelChapmanExtended.Syntax
 
 
+
+
+private
+  open import Relation.Binary.PropositionalEquality using (_≡_)
+  postulate
+    ren-val-• : ∀ {Δ Δ′ Δ″ a} (η′ : Δ″ ⊇ Δ′) (η : Δ′ ⊇ Δ) (v : Val Δ a) →
+                (ren-val η′ ∘ ren-val η) v ≡ ren-val (η′ • η) v
 
 
 mutual
@@ -95,22 +102,74 @@ mutual
           now (boom n′)
     ∎
     where open ≈-Reasoning
-  ren-readback-ne η (case v ul ur) =
+  ren-readback-ne η (case v wl wr) =
     proof
-          ren-nen η <$> (n ← readback-ne v ⁏
-                         now (case n ul ur))
+          ren-nen η <$> (n  ← readback-ne v ⁏
+                         ml ← readback wl ⁏
+                         mr ← readback wr ⁏
+                         now (case n ml mr))
     ≈⟨ ⋘ readback-ne v ⟩
           n ← readback-ne v ⁏
-          ren-nen η <$> now (case n ul ur)
-    ≡⟨⟩
-          n ← readback-ne v ⁏
-          now (case (ren-nen η n) ul ur)
+          ren-nen η <$> (ml ← readback wl ⁏
+                         mr ← readback wr ⁏
+                         now (case n ml mr))
+    ≈⟨ n ⇚ readback-ne v ⁏
+       ⋘ readback wl ⟩
+          n  ← readback-ne v ⁏
+          ml ← readback wl ⁏
+          ren-nen η <$> (mr ← readback wr ⁏
+                         now (case n ml mr))
+    ≈⟨ n  ⇚ readback-ne v ⁏
+       ml ⇚ readback wl ⁏
+       ⋘ readback wr ⟩
+          n  ← readback-ne v ⁏
+          ml ← readback wl ⁏
+          mr ← readback wr ⁏
+          ren-nen η <$> now (case n ml mr)
+    ≈⟨ n  ⇚ readback-ne v ⁏
+       ml ⇚ readback wl ⁏
+       mr ⇚ readback wr ⁏
+       ≈now (case (ren-nen η n) (ren-nf (lift η) ml) (ren-nf (lift η) mr)) ⟩
+          n  ← readback-ne v ⁏
+          ml ← readback wl ⁏
+          mr ← readback wr ⁏
+          now (case (ren-nen η n) (ren-nf (lift η) ml) (ren-nf (lift η) mr))
+    ≈⟨ n  ⇚ readback-ne v ⁏
+       ml ⇚ readback wl ⁏
+       ⋙ readback wr ⟩
+          n   ← readback-ne v ⁏
+          ml  ← readback wl ⁏
+          mr′ ← ren-nf (lift η) <$> readback wr ⁏
+          now (case (ren-nen η n) (ren-nf (lift η) ml) mr′)
+    ≈⟨ n  ⇚ readback-ne v ⁏
+       ml ⇚ readback wl ⁏
+       ∵ ren-readback (lift η) wr ⟩
+          n   ← readback-ne v ⁏
+          ml  ← readback wl ⁏
+          mr′ ← readback (ren-val (lift η) wr) ⁏
+          now (case (ren-nen η n) (ren-nf (lift η) ml) mr′)
+    ≈⟨ n ⇚ readback-ne v ⁏
+       ⋙ readback wl ⟩
+          n   ← readback-ne v ⁏
+          ml′ ← ren-nf (lift η) <$> readback wl ⁏
+          mr′ ← readback (ren-val (lift η) wr) ⁏
+          now (case (ren-nen η n) ml′ mr′)
+    ≈⟨ n ⇚ readback-ne v ⁏
+       ∵ ren-readback (lift η) wl ⟩
+          n   ← readback-ne v ⁏
+          ml′ ← readback (ren-val (lift η) wl) ⁏
+          mr′ ← readback (ren-val (lift η) wr) ⁏
+          now (case (ren-nen η n) ml′ mr′)
     ≈⟨ ⋙ readback-ne v ⟩
-          n′ ← ren-nen η <$> readback-ne v ⁏
-          now (case n′ ul ur)
+          n′  ← ren-nen η <$> readback-ne v ⁏
+          ml′ ← readback (ren-val (lift η) wl) ⁏
+          mr′ ← readback (ren-val (lift η) wr) ⁏
+          now (case n′ ml′ mr′)
     ≈⟨ ∵ ren-readback-ne η v ⟩
-          n′ ← readback-ne (ren-nev η v) ⁏
-          now (case n′ ul ur)
+          n′  ← readback-ne (ren-nev η v) ⁏
+          ml′ ← readback (ren-val (lift η) wl) ⁏
+          mr′ ← readback (ren-val (lift η) wr) ⁏
+          now (case n′ ml′ mr′)
     ∎
     where open ≈-Reasoning
   ren-readback-ne η (var x)   = ≈now (var (ren-var η x))

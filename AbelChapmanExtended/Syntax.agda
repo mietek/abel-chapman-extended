@@ -39,8 +39,8 @@ data Tm (Γ : Cx) : Ty → Set where
 
 data Ne (Ξ : Cx → Ty → Set) (Δ : Cx) : Ty → Set where
   boom : ∀ {c}       → Ne Ξ Δ ⊥                      → Ne Ξ Δ c
-  case : ∀ {Γ a b c} → Ne Ξ Δ (a ∨ b) → Tm (Γ , a) c
-                                        → Tm (Γ , b) c → Ne Ξ Δ c
+  case : ∀ {a b c} → Ne Ξ Δ (a ∨ b) → Ξ (Δ , a) c
+                                      → Ξ (Δ , b) c → Ne Ξ Δ c
   var  : ∀ {a}       → Var Δ a                        → Ne Ξ Δ a
   app  : ∀ {a b}     → Ne Ξ Δ (a ⇒ b) → Ξ Δ a       → Ne Ξ Δ b
   fst  : ∀ {a b}     → Ne Ξ Δ (a ∧ b)                 → Ne Ξ Δ a

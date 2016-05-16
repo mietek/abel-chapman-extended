@@ -8,7 +8,7 @@ open import AbelChapmanExtended.OPE
 open import AbelChapmanExtended.Renaming
 open import AbelChapmanExtended.Normalization
 open import AbelChapmanExtended.Semantics
-open import AbelChapmanExtended.RenamingLemmas.OPE
+--open import AbelChapmanExtended.RenamingLemmas.OPE
 open import AbelChapmanExtended.RenamingLemmas.Normalization1
 open import AbelChapmanExtended.RenamingLemmas.Normalization2
 open import AbelChapmanExtended.RenamingLemmas.Convergence

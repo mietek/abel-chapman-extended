@@ -8,6 +8,9 @@ open import AbelChapmanExtended.Renaming
 open import AbelChapmanExtended.Syntax
 
 
+cong₃ : ∀ {ℓ ℓ′ ℓ″ ℓ‴} {A : Set ℓ} {B : Set ℓ′} {C : Set ℓ″} {D : Set ℓ‴}
+        (f : A → B → C → D) {a a′ b b′ c c′} → a ≡ a′ → b ≡ b′ → c ≡ c′ → f a b c ≡ f a′ b′ c′
+cong₃ f refl refl refl = refl
 
 
 mutual
@@ -16,7 +19,7 @@ mutual
 
   ren-nev-id : ∀ {Δ a} (v : Ne Val Δ a) → ren-nev id v ≡ v
   ren-nev-id (boom v)       = cong boom (ren-nev-id v)
-  ren-nev-id (case v ul ur) rewrite ren-nev-id v = refl
+  ren-nev-id (case v wl wr) = cong₃ case (ren-nev-id v) {!!} {!!}
   ren-nev-id (var x)        = refl
   ren-nev-id (app v w)      = cong₂ app (ren-nev-id v) (ren-val-id w)
   ren-nev-id (fst v)        = cong fst (ren-nev-id v)
@@ -48,7 +51,7 @@ mutual
   ren-nev-• : ∀ {Δ Δ′ Δ″ a} (η′ : Δ″ ⊇ Δ′) (η : Δ′ ⊇ Δ) (v : Ne Val Δ a) →
               (ren-nev η′ ∘ ren-nev η) v ≡ ren-nev (η′ • η) v
   ren-nev-• η′ η (boom v)       = cong boom (ren-nev-• η′ η v)
-  ren-nev-• η′ η (case v ul ur) rewrite ren-nev-• η′ η v = refl
+  ren-nev-• η′ η (case v wl wr) = cong₃ case (ren-nev-• η′ η v) {!!} {!!}
   ren-nev-• η′ η (var x)        = cong var (ren-var-• η′ η x)
   ren-nev-• η′ η (app v w)      = cong₂ app (ren-nev-• η′ η v) (ren-val-• η′ η w)
   ren-nev-• η′ η (fst v)        = cong fst (ren-nev-• η′ η v)

@@ -11,12 +11,18 @@ open import AbelChapmanExtended.Normalization
 open import AbelChapmanExtended.OPE
 open import AbelChapmanExtended.Reflection
 open import AbelChapmanExtended.Renaming
-open import AbelChapmanExtended.RenamingLemmas.OPE
+--open import AbelChapmanExtended.RenamingLemmas.OPE
 open import AbelChapmanExtended.RenamingLemmas.Semantics
 open import AbelChapmanExtended.Semantics
 open import AbelChapmanExtended.Syntax
 
 
+
+
+private
+  open import Relation.Binary.PropositionalEquality using (_≡_)
+  postulate
+    ren-val-id : ∀ {Δ a} (v : Val Δ a) → ren-val id v ≡ v
 
 
 κ₁-reduce-sound : ∀ {Γ Δ a b c} (ul : Tm (Γ , a) c) (ur : Tm (Γ , b) c) →
@@ -75,9 +81,17 @@ open import AbelChapmanExtended.Syntax
          C⟦ c ⟧ (v ← v? ⁏
                  κ-reduce v ul ur ρ)
 ⟦case⟧ {c = c} t ul ur ρ ⟦ρ⟧ (ne v , ⇓v , (n , ⇓n)) hl hr =
-      let v′   = ne (case v ul ur)
-          ⟦v′⟧ = reflect c (case v ul ur) (case n ul ur , ⇓bind ⇓n ⇓now)
-      in  (v′ , ⇓bind ⇓v ⇓now , ⟦v′⟧)
+      let wl = {!!}
+          wr = {!!}
+          ⇓wl = {!!}
+          ⇓wr = {!!}
+          ml = {!!}
+          mr = {!!}
+          ⇓ml = {!!}
+          ⇓mr = {!!}
+          v′ = ne (case v wl wr)
+          ⟦v′⟧ = reflect c (case v wl wr) (case n ml mr , ⇓bind ⇓n (⇓bind ⇓ml (⇓bind ⇓mr ⇓now)))
+      in  (v′ , ⇓bind ⇓v (⇓bind ⇓wl (⇓bind ⇓wr ⇓now)) , ⟦v′⟧)
 ⟦case⟧ t ul ur ρ ⟦ρ⟧ (inl v , ⇓v , ⟦v⟧) hl hr =
       let (n , ⇓n , ⟦n⟧)    = ⟦v⟧
           (v′ , ⇓v′ , ⟦v′⟧) = κ₁-reduce-sound ul ur ρ (hl n ⟦n⟧)

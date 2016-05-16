@@ -1,6 +1,6 @@
 module AbelChapmanExtended.RenamingLemmas.Normalization1 where
 
-open import Relation.Binary.PropositionalEquality using (_≡_ ; refl)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; sym ; cong)
 
 open import AbelChapmanExtended.Delay
 open import AbelChapmanExtended.Normalization
@@ -10,6 +10,11 @@ open import AbelChapmanExtended.StrongBisimilarity
 open import AbelChapmanExtended.Syntax
 
 
+private
+  open import Function using (_∘_)
+  postulate
+    ren-env-• : ∀ {Γ Δ Δ′ Δ″} (η′ : Δ″ ⊇ Δ′) (η : Δ′ ⊇ Δ) (ρ : Env Δ Γ) →
+                  (ren-env η′ ∘ ren-env η) ρ ≡ ren-env (η′ • η) ρ
 
 
 ren-lookup : ∀ {Γ Δ Δ′ a} (η : Δ′ ⊇ Δ) (x : Var Γ a) (ρ : Env Δ Γ) →
@@ -246,7 +251,92 @@ mutual
                  (ul : Tm (Γ , a) c) (ur : Tm (Γ , b) c) (ρ : Env Δ Γ) →
                  ren-val η <$> κ-reduce v ul ur ρ ≈⟨ i ⟩≈
                  κ-reduce (ren-val η v) ul ur (ren-env η ρ)
-  ren-κ-reduce η (ne v)  ul ur ρ = ≈refl
+  ren-κ-reduce η (ne v)  ul ur ρ =
+    proof
+          ren-val η <$> (wl ← eval ul (wk-env ρ , nev₀) ⁏
+                         wr ← eval ur (wk-env ρ , nev₀) ⁏
+                         now (ne (case v wl wr)))
+    ≈⟨ ⋘ eval ul (wk-env ρ , nev₀) ⟩
+          wl ← eval ul (wk-env ρ , nev₀) ⁏
+          ren-val η <$> (wr ← eval ur (wk-env ρ , nev₀) ⁏
+                         now (ne (case v wl wr)))
+    ≈⟨ wl ⇚ eval ul (wk-env ρ , nev₀) ⁏
+       ⋘ eval ur (wk-env ρ , nev₀) ⟩
+          wl ← eval ul (wk-env ρ , nev₀) ⁏
+          wr ← eval ur (wk-env ρ , nev₀) ⁏
+          ren-val η <$> now (ne (case v wl wr))
+    ≈⟨ wl ⇚ eval ul (wk-env ρ , nev₀) ⁏
+       wr ⇚ eval ur (wk-env ρ , nev₀) ⁏
+       ≈now (ne (ren-nev η (case v wl wr))) ⟩
+          wl ← eval ul (wk-env ρ , nev₀) ⁏
+          wr ← eval ur (wk-env ρ , nev₀) ⁏
+          now (ne (ren-nev η (case v wl wr)))
+    ≡⟨⟩
+          wl ← eval ul (wk-env ρ , nev₀) ⁏
+          wr ← eval ur (wk-env ρ , nev₀) ⁏
+          now (ne (case (ren-nev η v) (ren-val (lift η) wl) (ren-val (lift η) wr)))
+    ≈⟨ wl ⇚ eval ul (wk-env ρ , nev₀) ⁏
+       ⋙ eval ur (wk-env ρ , nev₀) ⟩
+          wl  ← eval ul (wk-env ρ , nev₀) ⁏
+          wr′ ← ren-val (lift η) <$> eval ur (wk-env ρ , nev₀) ⁏
+          now (ne (case (ren-nev η v) (ren-val (lift η) wl) wr′))
+    ≈⟨ wl ⇚ eval ul (wk-env ρ , nev₀) ⁏
+       ∵ ren-eval (lift η) ur (wk-env ρ , nev₀) ⟩
+          wl  ← eval ul (wk-env ρ , nev₀) ⁏
+          wr′ ← eval ur (ren-env (lift η) (wk-env ρ) , nev₀) ⁏
+          now (ne (case (ren-nev η v) (ren-val (lift η) wl) wr′))
+    ≡⟨ cong (λ ρ′ → (wl  ← eval ul (wk-env ρ , nev₀) ⁏
+                      wr′ ← eval ur (ρ′ , nev₀) ⁏
+                      now (ne (case (ren-nev η v) (ren-val (lift η) wl) wr′))))
+            (ren-env-• (lift η) wk ρ) ⟩
+          wl  ← eval ul (wk-env ρ , nev₀) ⁏
+          wr′ ← eval ur (ren-env (weak (η • id)) ρ , nev₀) ⁏
+          now (ne (case (ren-nev η v) (ren-val (lift η) wl) wr′))
+    ≡⟨ cong (λ η′ → (wl  ← eval ul (wk-env ρ , nev₀) ⁏
+                      wr′ ← eval ur (ren-env (weak η′) ρ , nev₀) ⁏
+                      now (ne (case (ren-nev η v) (ren-val (lift η) wl) wr′))))
+            (η•id η) ⟩
+          wl  ← eval ul (wk-env ρ , nev₀) ⁏
+          wr′ ← eval ur (ren-env (weak η) ρ , nev₀) ⁏
+          now (ne (case (ren-nev η v) (ren-val (lift η) wl) wr′))
+    ≡⟨ cong (λ ρ′ → (wl  ← eval ul (wk-env ρ , nev₀) ⁏
+                      wr′ ← eval ur (ρ′ , nev₀) ⁏
+                      now (ne (case (ren-nev η v) (ren-val (lift η) wl) wr′))))
+            (sym (ren-env-• wk η ρ)) ⟩
+          wl  ← eval ul (wk-env ρ , nev₀) ⁏
+          wr′ ← eval ur (wk-env (ren-env η ρ) , nev₀) ⁏
+          now (ne (case (ren-nev η v) (ren-val (lift η) wl) wr′))
+    ≈⟨ ⋙ eval ul (wk-env ρ , nev₀) ⟩
+          wl′ ← ren-val (lift η) <$> eval ul (wk-env ρ , nev₀) ⁏
+          wr′ ← eval ur (wk-env (ren-env η ρ) , nev₀) ⁏
+          now (ne (case (ren-nev η v) wl′ wr′))
+    ≈⟨ ∵ ren-eval (lift η) ul (wk-env ρ , nev₀) ⟩
+          wl′ ← eval ul (ren-env (lift η) (wk-env ρ) , nev₀) ⁏
+          wr′ ← eval ur (wk-env (ren-env η ρ) , nev₀) ⁏
+          now (ne (case (ren-nev η v) wl′ wr′))
+    ≡⟨ cong (λ ρ′ → (wl′ ← eval ul (ρ′ , nev₀) ⁏
+                      wr′ ← eval ur (wk-env (ren-env η ρ) , nev₀) ⁏
+                      now (ne (case (ren-nev η v) wl′ wr′))))
+            (ren-env-• (lift η) wk ρ) ⟩
+          wl′ ← eval ul (ren-env (weak (η • id)) ρ , nev₀) ⁏
+          wr′ ← eval ur (wk-env (ren-env η ρ) , nev₀) ⁏
+          now (ne (case (ren-nev η v) wl′ wr′))
+    ≡⟨ cong (λ η′ → (wl′ ← eval ul (ren-env (weak η′) ρ , nev₀) ⁏
+                      wr′ ← eval ur (wk-env (ren-env η ρ) , nev₀) ⁏
+                      now (ne (case (ren-nev η v) wl′ wr′))))
+            (η•id η) ⟩
+          wl′ ← eval ul (ren-env (weak η) ρ , nev₀) ⁏
+          wr′ ← eval ur (wk-env (ren-env η ρ) , nev₀) ⁏
+          now (ne (case (ren-nev η v) wl′ wr′))
+    ≡⟨ cong (λ ρ′ → (wl′ ← eval ul (ρ′ , nev₀) ⁏
+                      wr′ ← eval ur (wk-env (ren-env η ρ) , nev₀) ⁏
+                      now (ne (case (ren-nev η v) wl′ wr′))))
+            (sym (ren-env-• wk η ρ)) ⟩
+          wl′ ← eval ul (wk-env (ren-env η ρ) , nev₀) ⁏
+          wr′ ← eval ur (wk-env (ren-env η ρ) , nev₀) ⁏
+          now (ne (case (ren-nev η v) wl′ wr′))
+    ∎
+    where open ≈-Reasoning
   ren-κ-reduce η (inl v) ul ur ρ = ≈later (ren-∞eval η ul (ρ , v))
   ren-κ-reduce η (inr v) ul ur ρ = ≈later (ren-∞eval η ur (ρ , v))
 

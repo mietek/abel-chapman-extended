@@ -3,6 +3,7 @@ module AbelChapmanExtended.Normalization where
 open import Size using (∞)
 
 open import AbelChapmanExtended.Delay
+open import AbelChapmanExtended.OPE
 open import AbelChapmanExtended.Syntax
 open import AbelChapmanExtended.Renaming
 
@@ -54,7 +55,9 @@ mutual
 
   κ-reduce : ∀ {i Γ Δ a b c} → Val Δ (a ∨ b) →
              Tm (Γ , a) c → Tm (Γ , b) c → Env Δ Γ → Delay i (Val Δ c)
-  κ-reduce (ne v)  ul ur ρ = now (ne (case v ul ur))
+  κ-reduce (ne v)  ul ur ρ = wl ← eval ul (wk-env ρ , nev₀) ⁏
+                             wr ← eval ur (wk-env ρ , nev₀) ⁏
+                             now (ne (case v wl wr))
   κ-reduce (inl v) ul ur ρ = later (∞eval ul (ρ , v))
   κ-reduce (inr v) ul ur ρ = later (∞eval ur (ρ , v))
 
@@ -76,8 +79,10 @@ mutual
   readback-ne : ∀ {i Δ a} → Ne Val Δ a → Delay i (Ne Nf Δ a)
   readback-ne (boom v)       = n ← readback-ne v ⁏
                                now (boom n)
-  readback-ne (case v ul ur) = n ← readback-ne v ⁏
-                               now (case n ul ur)
+  readback-ne (case v wl wr) = n  ← readback-ne v ⁏
+                               ml ← readback wl ⁏
+                               mr ← readback wr ⁏
+                               now (case n ml mr)
   readback-ne (var x)        = now (var x)
   readback-ne (app v w)      = n ← readback-ne v ⁏
                                m ← readback w ⁏
@@ -102,7 +107,7 @@ mutual
 
 id-env : (Γ : Cx) → Env Γ Γ
 id-env ∅       = ∅
-id-env (Γ , a) = (ren-env wk (id-env Γ) , nev₀)
+id-env (Γ , a) = (wk-env (id-env Γ) , nev₀)
 
 nf? : ∀ {Γ a} → Tm Γ a → Delay ∞ (Nf Γ a)
 nf? {Γ} t = t′ ← eval t (id-env Γ) ⁏

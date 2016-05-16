@@ -8,12 +8,20 @@ open import AbelChapmanExtended.Convergence
 open import AbelChapmanExtended.Normalization
 open import AbelChapmanExtended.OPE
 open import AbelChapmanExtended.RenamingLemmas.Convergence
-open import AbelChapmanExtended.RenamingLemmas.OPE
+--open import AbelChapmanExtended.RenamingLemmas.OPE
 open import AbelChapmanExtended.Renaming
 open import AbelChapmanExtended.Semantics
 open import AbelChapmanExtended.Syntax
 
 
+
+
+private
+  open import Function using (_∘_)
+  open import Relation.Binary.PropositionalEquality using (_≡_)
+  postulate
+    ren-val-• : ∀ {Δ Δ′ Δ″ a} (η′ : Δ″ ⊇ Δ′) (η : Δ′ ⊇ Δ) (v : Val Δ a) →
+                (ren-val η′ ∘ ren-val η) v ≡ ren-val (η′ • η) v
 
 
 ren-V⟦⟧ : ∀ {Δ Δ′} (a : Ty) (η : Δ′ ⊇ Δ) (v : Val Δ a) →
