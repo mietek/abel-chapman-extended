@@ -31,45 +31,6 @@ mutual
           ne <$> readback-ne (ren-nev η v)
     ∎
     where open ≈-Reasoning
-  ren-readback {a = a ∨ b} η (ne v) =
-    proof
-          ren-nf η <$> (ne <$> readback-ne v)
-    ≈⟨ ⋘ readback-ne v ⟩
-          (ren-nf η ∘ ne) <$> readback-ne v
-    ≡⟨⟩
-          (ne ∘ ren-nen η) <$> readback-ne v
-    ≈⟨ ⋙ readback-ne v ⟩
-          ne <$> (ren-nen η <$> readback-ne v)
-    ≈⟨ ∵ ren-readback-ne η v ⟩
-          ne <$> readback-ne (ren-nev η v)
-    ∎
-    where open ≈-Reasoning
-  ren-readback {a = a ∨ b} η (inl v) =
-    proof
-          ren-nf η <$> (inl <$> readback v)
-    ≈⟨ ⋘ readback v ⟩
-          (ren-nf η ∘ inl) <$> readback v
-    ≡⟨⟩
-          (inl ∘ ren-nf η) <$> readback v
-    ≈⟨ ⋙ readback v ⟩
-          inl <$> (ren-nf η <$> readback v)
-    ≈⟨ ∵ ren-readback η v ⟩
-          inl <$> readback (ren-val η v)
-    ∎
-    where open ≈-Reasoning
-  ren-readback {a = a ∨ b} η (inr v) =
-    proof
-          ren-nf η <$> (inr <$> readback v)
-    ≈⟨ ⋘ readback v ⟩
-          (ren-nf η ∘ inr) <$> readback v
-    ≡⟨⟩
-          (inr ∘ ren-nf η) <$> readback v
-    ≈⟨ ⋙ readback v ⟩
-          inr <$> (ren-nf η <$> readback v)
-    ≈⟨ ∵ ren-readback η v ⟩
-          inr <$> readback (ren-val η v)
-    ∎
-    where open ≈-Reasoning
   ren-readback {a = a ⇒ b} η v      = ≈later (ren-∞η-expand η v)
   ren-readback {a = a ∧ b}  η v      = ≈later (ren-∞ψ-expand η v)
   ren-readback {a = ⊤}     η v      = ≈now unit
@@ -93,24 +54,6 @@ mutual
     ≈⟨ ∵ ren-readback-ne η v ⟩
           n′ ← readback-ne (ren-nev η v) ⁏
           now (boom n′)
-    ∎
-    where open ≈-Reasoning
-  ren-readback-ne η (case v ul ur) =
-    proof
-          ren-nen η <$> (n ← readback-ne v ⁏
-                         now (case n ul ur))
-    ≈⟨ ⋘ readback-ne v ⟩
-          n ← readback-ne v ⁏
-          ren-nen η <$> now (case n ul ur)
-    ≡⟨⟩
-          n ← readback-ne v ⁏
-          now (case (ren-nen η n) ul ur)
-    ≈⟨ ⋙ readback-ne v ⟩
-          n′ ← ren-nen η <$> readback-ne v ⁏
-          now (case n′ ul ur)
-    ≈⟨ ∵ ren-readback-ne η v ⟩
-          n′ ← readback-ne (ren-nev η v) ⁏
-          now (case n′ ul ur)
     ∎
     where open ≈-Reasoning
   ren-readback-ne η (var x)   = ≈now (var (ren-var η x))
